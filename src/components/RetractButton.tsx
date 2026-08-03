@@ -46,7 +46,9 @@ export function RetractButton({
     return () => clearInterval(id);
   }, [myBidPlacedAt, windowSeconds]);
 
-  if (myBidPlacedAt === null || item.status === 'ENDED') return null;
+  // Hidden once the lot closes for any reason — the server refuses retraction
+  // after the hammer falls, so offering the button would be a lie.
+  if (myBidPlacedAt === null || (item.isClosed ?? item.status === 'ENDED')) return null;
 
   const expired = secondsLeft <= 0;
 

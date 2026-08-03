@@ -10,7 +10,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BidForm } from '@/components/BidForm';
 import { ApiError, api } from '@/lib/api';
-import { healthyItem, noop } from './fixtures';
+import { healthyItem, adminClosedItem, expiredItem, noop } from './fixtures';
 
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>();
@@ -241,7 +241,7 @@ describe('Closed lots', () => {
   it('replaces the form entirely rather than disabling a still-visible button', () => {
     render(
       <BidForm
-        item={healthyItem({ status: 'ENDED' })}
+        item={adminClosedItem()}
         token="test-token"
         onSuccess={noop}
         onRefreshNeeded={noop}
@@ -249,6 +249,23 @@ describe('Closed lots', () => {
     );
 
     expect(screen.getByText(/Bidding is closed for this lot/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /place bid/i })).not.toBeInTheDocument();
+  });
+
+  it('closes on the server-computed flag, not on the raw status column', () => {
+    // A lot that ran out of time keeps status 'ACTIVE' in the database. If the
+    // form trusted `status` alone it would happily take bids on a finished lot.
+    render(
+      <BidForm
+        item={expiredItem()}
+        token="test-token"
+        onSuccess={noop}
+        onRefreshNeeded={noop}
+      />
+    );
+
+    expect(screen.getByText(/Bidding is closed for this lot/i)).toBeInTheDocument();
+    expect(screen.getByText(/scheduled end time has passed/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /place bid/i })).not.toBeInTheDocument();
   });
 });

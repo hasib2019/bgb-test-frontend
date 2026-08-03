@@ -11,9 +11,13 @@ export function healthyItem(overrides: Partial<AuctionItem> = {}): AuctionItem {
     minIncrement: 10,
     minimumAcceptableBid: 12010,
     status: 'ACTIVE',
+    isExpired: false,
+    isClosed: false,
+    isBiddable: true,
     version: 3,
     endsAt: null,
     endedAt: null,
+    serverTime: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     bidCount: 2,
     highestBid: {
@@ -35,6 +39,7 @@ export const negativePriceItem = (): AuctionItem =>
     currentPrice: -4500,
     startingPrice: -4500,
     minimumAcceptableBid: null,
+    isBiddable: false,
     highestBid: null,
     bidCount: 0,
     dataQuality: {
@@ -103,6 +108,43 @@ export const stringHistoryItem = (): AuctionItem =>
         },
       ],
     },
+  });
+
+/** A lot whose scheduled end time has passed. Note `status` is still 'ACTIVE'. */
+export const expiredItem = (): AuctionItem =>
+  healthyItem({
+    id: '55555555-5555-4555-8555-555555555555',
+    title: 'Ended Lot — Georgian Silver Tea Service',
+    status: 'ACTIVE',
+    isExpired: true,
+    isClosed: true,
+    isBiddable: false,
+    minimumAcceptableBid: null,
+    endsAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    endedAt: null,
+    serverTime: new Date().toISOString(),
+  });
+
+/** A lot an admin closed early. */
+export const adminClosedItem = (): AuctionItem =>
+  healthyItem({
+    id: '66666666-6666-4666-8666-666666666666',
+    title: 'Withdrawn Lot — Cartier Panthère Brooch',
+    status: 'ENDED',
+    isExpired: false,
+    isClosed: true,
+    isBiddable: false,
+    minimumAcceptableBid: null,
+    endedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+  });
+
+/** A lot closing in 30 seconds — exercises the final-minute countdown. */
+export const closingSoonItem = (): AuctionItem =>
+  healthyItem({
+    id: '77777777-7777-4777-8777-777777777777',
+    title: 'Closing Soon — Rolex Daytona "Paul Newman"',
+    endsAt: new Date(Date.now() + 30 * 1000).toISOString(),
+    serverTime: new Date().toISOString(),
   });
 
 export const standardUser: User = {

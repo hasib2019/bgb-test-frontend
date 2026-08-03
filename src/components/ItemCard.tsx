@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { formatMoney, formatRelativeTime, isRenderableMoney, UNRENDERABLE } from '@/lib/format';
 import type { AuctionItem, User } from '@/lib/types';
+import { AuctionCountdown } from './AuctionCountdown';
 import { BidForm } from './BidForm';
 import { DataQualityPanel } from './DataQualityPanel';
 import { RetractButton } from './RetractButton';
@@ -28,7 +29,12 @@ export function ItemCard({
   const [priceChanged, setPriceChanged] = useState(false);
   const previousPrice = useRef(item.currentPrice);
 
-  const isClosed = item.status === 'ENDED';
+  // Closed covers BOTH ways an auction ends: an admin closing it early, and the
+  // scheduled end time passing. The server computes this — deriving it here
+  // from `endsAt` against the browser clock would let a skewed machine show a
+  // bid form for a lot that is already over.
+  const isClosed = item.isClosed ?? item.status === 'ENDED';
+  const isExpired = item.isExpired ?? false;
   const isDegraded = !item.dataQuality.ok;
   const iAmHighest = user !== null && item.highestBid?.bidderId === user.id;
 
@@ -79,15 +85,23 @@ export function ItemCard({
       <header className="flex items-start justify-between gap-3">
         <h3 className="text-base font-semibold leading-snug text-ink-200">{titleNode}</h3>
 
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            isClosed
-              ? 'bg-ink-700 text-ink-300'
-              : 'bg-emerald-950 text-emerald-400 ring-1 ring-emerald-900'
-          }`}
-        >
-          {isClosed ? 'Closed' : 'Live'}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+              isClosed
+                ? 'bg-ink-700 text-ink-300'
+                : 'bg-emerald-950 text-emerald-400 ring-1 ring-emerald-900'
+            }`}
+          >
+            {isClosed ? 'Closed' : 'Live'}
+          </span>
+
+          <AuctionCountdown
+            endsAt={item.endsAt}
+            serverTime={item.serverTime}
+            isClosed={isClosed}
+          />
+        </div>
       </header>
 
       {item.description && (
@@ -248,7 +262,9 @@ export function ItemCard({
 
         {isClosed && (
           <p className="text-center text-[11px] text-ink-500">
-            Closed {formatRelativeTime(item.endedAt)}
+            {isExpired && item.status !== 'ENDED'
+              ? `Bidding closed ${formatRelativeTime(item.endsAt)} at the scheduled end time`
+              : `Closed ${formatRelativeTime(item.endedAt)} by an administrator`}
             {item.highestBid && ` · won by ${item.highestBid.bidderName}`}
           </p>
         )}

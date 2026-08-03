@@ -41,8 +41,10 @@ export function BidForm({ item, token, onSuccess, onRefreshNeeded }: BidFormProp
   const inputRef = useRef<HTMLInputElement>(null);
 
   const minimum = item.minimumAcceptableBid;
-  const isClosed = item.status === 'ENDED';
-  const isBiddable = item.dataQuality.biddable && !isClosed;
+  // Server-computed: covers admin closure AND the scheduled end time passing.
+  const isClosed = item.isClosed ?? item.status === 'ENDED';
+  const isExpired = item.isExpired ?? false;
+  const isBiddable = (item.isBiddable ?? item.dataQuality.biddable) && !isClosed;
 
   // ---- Client-side validation (Requirement 4) -------------------------------
   const parsed = amount.trim() === '' ? null : Number(amount);
@@ -119,6 +121,11 @@ export function BidForm({ item, token, onSuccess, onRefreshNeeded }: BidFormProp
     return (
       <div className="rounded-lg border border-ink-700 bg-ink-900/60 px-4 py-3 text-center">
         <p className="text-sm font-medium text-ink-300">Bidding is closed for this lot.</p>
+        <p className="mt-0.5 text-[11px] text-ink-500">
+          {isExpired && item.status !== 'ENDED'
+            ? 'The scheduled end time has passed.'
+            : 'An administrator closed this auction.'}
+        </p>
       </div>
     );
   }

@@ -23,8 +23,12 @@ export function AuctionDashboard() {
     setMyBidTimes((prev) => ({ ...prev, [itemId]: Date.now() }));
   }, []);
 
-  const activeItems = items.filter((i) => i.status === 'ACTIVE');
-  const closedItems = items.filter((i) => i.status === 'ENDED');
+  // `isClosed` is computed server-side and covers both admin closure and the
+  // scheduled end time passing, so a lot moves to "Closed" on the next poll
+  // without the browser needing to reason about time at all.
+  const isItemClosed = (i: (typeof items)[number]) => i.isClosed ?? i.status === 'ENDED';
+  const activeItems = items.filter((i) => !isItemClosed(i));
+  const closedItems = items.filter(isItemClosed);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

@@ -47,13 +47,24 @@ export interface AuctionItem {
   startingPrice: number;
   currentPrice: number;
   minIncrement: number;
-  /** null when the lot is not safely biddable. */
+  /** null when the lot is closed or not safely biddable. */
   minimumAcceptableBid: number | null;
+
+  /** The raw database column. Stays 'ACTIVE' on a lot that merely ran out of time. */
   status: ItemStatus;
+  /** Scheduled end time has passed, per the SERVER clock. */
+  isExpired: boolean;
+  /** Closed for any reason: admin ended it early, or it expired. */
+  isClosed: boolean;
+  /** The single flag to gate the bid form on: open AND data is sound. */
+  isBiddable: boolean;
+
   /** The optimistic-concurrency token echoed back when bidding. */
   version: number;
   endsAt: string | null;
   endedAt: string | null;
+  /** Authoritative clock, used to render a countdown without client drift. */
+  serverTime: string;
   createdAt: string;
   bidCount: number;
   highestBid: HighestBid | null;
@@ -63,7 +74,7 @@ export interface AuctionItem {
 
 export interface ItemsResponse {
   items: AuctionItem[];
-  meta: { total: number; healthy: number; degraded: number };
+  meta: { total: number; healthy: number; degraded: number; open: number; closed: number };
 }
 
 export interface Bid {
