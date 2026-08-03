@@ -4,6 +4,10 @@ out
 npm-debug.log
 .env.local
 __tests__
+e2e
+playwright.config.ts
+test-results
+playwright-report
 coverage
 .git
 *.md

@@ -17,6 +17,10 @@ ARG NEXT_PUBLIC_API_URL=http://localhost:4000
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Asks next.config.mjs for `output: 'standalone'`, which the runtime stage below
+# copies. It is off by default because it is incompatible with `next start`.
+ENV BUILD_STANDALONE=1
+
 RUN npm run build
 
 FROM node:22-alpine AS runtime

@@ -1,4 +1,8 @@
 __tests__
+e2e
+playwright.config.ts
+test-results
+playwright-report
 vitest.config.mts
 Dockerfile
 .dockerignore
