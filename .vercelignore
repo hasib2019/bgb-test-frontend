@@ -1,0 +1,6 @@
+__tests__
+vitest.config.mts
+Dockerfile
+.dockerignore
+.env.local
+*.md
