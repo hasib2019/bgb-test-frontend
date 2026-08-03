@@ -111,8 +111,15 @@ describe('Negative price (critical)', () => {
       />
     );
 
-    expect(screen.getByText(/Bidding disabled/i)).toBeInTheDocument();
+    // The fault is stated twice on purpose: once in the data-quality panel as a
+    // diagnosis, once where the bid form would have been as a consequence.
+    expect(screen.getByText(/Corrupt data — bidding disabled/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Bidding disabled — this lot's pricing data is corrupt\./i)
+    ).toBeInTheDocument();
+
     expect(screen.queryByRole('button', { name: /place bid/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/your bid/i)).not.toBeInTheDocument();
   });
 });
 
